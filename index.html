@@ -6,7 +6,6 @@
   <title>Scanner Dell</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #f0f0f0;
@@ -16,7 +15,6 @@
       justify-content: center;
       padding: 1.5rem 1rem;
     }
-
     .card {
       background: #fff;
       border-radius: 16px;
@@ -25,20 +23,11 @@
       max-width: 480px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 1.25rem;
-    }
-
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
     .logo svg { width: 32px; height: 32px; }
-
     .logo-text { font-size: 17px; font-weight: 600; color: #111; }
     .logo-sub  { font-size: 12px; color: #888; margin-top: 1px; }
 
-    /* Viewfinder */
     #viewfinder {
       position: relative;
       width: 100%;
@@ -48,177 +37,109 @@
       overflow: hidden;
       margin-bottom: 1rem;
     }
-
-    #video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
+    #video { width: 100%; height: 100%; object-fit: cover; display: block; }
     #canvas { display: none; }
 
     .vf-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
     }
-
     .vf-box {
-      width: 78%;
-      height: 35%;
-      border: 2px solid rgba(255,255,255,0.85);
+      width: 85%; height: 30%;
+      border: 2px solid rgba(255,255,255,0.7);
       border-radius: 8px;
       position: relative;
     }
-
     .vf-box::before, .vf-box::after,
     .vf-box .c2::before, .vf-box .c2::after {
-      content: '';
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      border-color: #4A90E2;
-      border-style: solid;
+      content: ''; position: absolute;
+      width: 20px; height: 20px;
+      border-color: #4A90E2; border-style: solid;
     }
-    .vf-box::before      { top: -2px;  left: -2px;  border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
-    .vf-box::after       { top: -2px;  right: -2px; border-width: 3px 3px 0 0; border-radius: 0 6px 0 0; }
-    .vf-box .c2::before  { bottom: -2px; left: -2px;  border-width: 0 0 3px 3px; border-radius: 0 0 0 6px; }
-    .vf-box .c2::after   { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
-
+    .vf-box::before     { top:-2px; left:-2px;   border-width:3px 0 0 3px; border-radius:6px 0 0 0; }
+    .vf-box::after      { top:-2px; right:-2px;  border-width:3px 3px 0 0; border-radius:0 6px 0 0; }
+    .vf-box .c2::before { bottom:-2px; left:-2px;  border-width:0 0 3px 3px; border-radius:0 0 0 6px; }
+    .vf-box .c2::after  { bottom:-2px; right:-2px; border-width:0 3px 3px 0; border-radius:0 0 6px 0; }
     .scan-line {
-      position: absolute;
-      left: 6px; right: 6px;
-      height: 2px;
+      position: absolute; left: 4px; right: 4px; height: 2px;
       background: linear-gradient(90deg, transparent, #4A90E2, transparent);
-      animation: scanAnim 2s ease-in-out infinite;
+      animation: scanAnim 1.8s ease-in-out infinite;
     }
     @keyframes scanAnim {
-      0%   { top: 8px; opacity: 0.5; }
-      50%  { top: calc(100% - 10px); opacity: 1; }
-      100% { top: 8px; opacity: 0.5; }
+      0%,100% { top: 4px; opacity:0.4; }
+      50%      { top: calc(100% - 6px); opacity:1; }
     }
-
     .vf-hint {
-      position: absolute;
-      bottom: 10px;
-      left: 0; right: 0;
-      text-align: center;
-      font-size: 12px;
-      color: rgba(255,255,255,0.75);
+      position: absolute; bottom: 8px; left:0; right:0;
+      text-align: center; font-size: 11px;
+      color: rgba(255,255,255,0.8);
     }
-
     #placeholder {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      color: #aaa;
-      font-size: 14px;
+      position: absolute; inset:0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; color: #aaa; font-size: 14px;
     }
-    #placeholder svg { opacity: 0.4; }
 
-    /* Boutons */
     .btn {
-      display: block;
-      width: 100%;
-      padding: 13px;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity .15s;
+      display: block; width: 100%; padding: 13px;
+      border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 500; cursor: pointer;
     }
-    .btn:active { opacity: 0.8; }
-    .btn-primary { background: #0076CE; color: #fff; }
+    .btn-primary   { background: #0076CE; color: #fff; }
     .btn-secondary { background: #f0f0f0; color: #333; margin-top: 8px; }
-    .btn:disabled { opacity: 0.45; cursor: default; }
+    .btn:disabled  { opacity: 0.45; cursor: default; }
 
-    /* Séparateur */
     .sep {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 1rem 0;
-      color: #bbb;
-      font-size: 12px;
+      display: flex; align-items: center; gap: 10px;
+      margin: 1rem 0; color: #bbb; font-size: 12px;
     }
     .sep::before, .sep::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #e5e5e5;
+      content:''; flex:1; height:1px; background:#e5e5e5;
     }
 
-    /* Saisie manuelle */
     .manual-row { display: flex; gap: 8px; }
     .manual-row input {
-      flex: 1;
-      padding: 11px 12px;
-      border: 1.5px solid #ddd;
-      border-radius: 10px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color .2s;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      flex:1; padding: 11px 12px;
+      border: 1.5px solid #ddd; border-radius: 10px;
+      font-size: 15px; outline: none;
+      text-transform: uppercase; letter-spacing: 1px;
     }
     .manual-row input:focus { border-color: #0076CE; }
     .manual-row button {
-      padding: 11px 16px;
-      background: #0076CE;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
+      padding: 11px 18px;
+      background: #0076CE; color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 500; cursor: pointer;
     }
 
-    /* Statut */
     #status {
-      text-align: center;
-      font-size: 13px;
-      color: #888;
-      margin: 0.75rem 0 0;
-      min-height: 18px;
+      text-align: center; font-size: 13px; color: #888;
+      margin: 0.75rem 0 0; min-height: 18px;
     }
     #status.ok  { color: #2e7d32; }
     #status.err { color: #c62828; }
 
-    /* Résultat */
     #result {
-      display: none;
-      margin-top: 1rem;
-      background: #f7faff;
-      border: 1.5px solid #cce0f5;
-      border-radius: 12px;
-      padding: 1rem;
+      display: none; margin-top: 1rem;
+      background: #f7faff; border: 1.5px solid #cce0f5;
+      border-radius: 12px; padding: 1rem;
     }
     #result.visible { display: block; }
-    .result-tag-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
-    .result-tag-value { font-size: 22px; font-weight: 700; color: #111; letter-spacing: 2px; margin-bottom: 1rem; }
+    .result-label { font-size: 11px; color:#888; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .result-value { font-size: 24px; font-weight:700; color:#111; letter-spacing:2px; margin-bottom:1rem; }
     .btn-dell {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 12px;
-      background: #0076CE;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; padding: 13px;
+      background: #0076CE; color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 500;
+      cursor: pointer; text-decoration: none;
+    }
+
+    #debug {
+      margin-top: 8px; font-size: 11px; color: #aaa;
+      text-align: center; min-height: 16px;
     }
   </style>
 </head>
@@ -236,47 +157,41 @@
     </div>
   </div>
 
-  <!-- Viewfinder -->
   <div id="viewfinder">
     <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
-
     <div class="vf-overlay" id="vf-overlay" style="display:none">
       <div class="vf-box">
         <div class="c2"></div>
         <div class="scan-line"></div>
       </div>
-      <div class="vf-hint">Centrez le code-barres dans le cadre</div>
+      <div class="vf-hint">Alignez le code-barres dans le cadre</div>
     </div>
-
     <div id="placeholder">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
-        <rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/>
-        <rect x="3" y="16" width="5" height="5" rx="1"/>
-        <line x1="10" y1="4.5" x2="10" y2="7.5"/><line x1="13" y1="4.5" x2="13" y2="7.5"/>
-        <line x1="10" y1="16.5" x2="10" y2="19.5"/><line x1="13" y1="13" x2="13" y2="20"/>
-        <line x1="16" y1="13" x2="20" y2="13"/>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.2">
+        <rect x="2" y="6" width="1.5" height="12"/><rect x="5" y="6" width="3" height="12"/>
+        <rect x="10" y="6" width="1.5" height="12"/><rect x="13" y="6" width="2" height="12"/>
+        <rect x="17" y="6" width="1.5" height="12"/><rect x="20" y="6" width="1.5" height="12"/>
       </svg>
       Caméra inactive
     </div>
   </div>
 
   <p id="status">Appuyez sur Démarrer pour scanner</p>
+  <div id="debug"></div>
 
   <button class="btn btn-primary" id="start-btn" onclick="startScan()">📷 Démarrer la caméra</button>
   <button class="btn btn-secondary" id="stop-btn" style="display:none" onclick="stopScan()">⏹ Arrêter</button>
 
   <div class="sep">ou saisie manuelle</div>
-
   <div class="manual-row">
-    <input id="tag-input" type="text" placeholder="Service Tag (ex: ABC1234)" maxlength="12"/>
+    <input id="tag-input" type="text" placeholder="Ex : ABC1234" maxlength="12"/>
     <button onclick="goManual()">→</button>
   </div>
 
-  <!-- Résultat -->
   <div id="result">
-    <div class="result-tag-label">Service Tag détecté</div>
-    <div class="result-tag-value" id="result-tag">—</div>
+    <div class="result-label">Service Tag détecté</div>
+    <div class="result-value" id="result-tag">—</div>
     <a id="dell-link" class="btn-dell" target="_blank" rel="noopener">
       Ouvrir sur Dell Support →
     </a>
@@ -284,146 +199,204 @@
 
 </div>
 
-<!-- Bibliothèque de décodage : ZXing via CDN fiable -->
-<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/umd/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
-
 <script>
 (function () {
   'use strict';
 
-  let stream = null;
-  let rafId  = null;
-  let hints  = null;
+  const video       = document.getElementById('video');
+  const canvas      = document.getElementById('canvas');
+  const ctx         = canvas.getContext('2d', { willReadFrequently: true });
+  const statusEl    = document.getElementById('status');
+  const debugEl     = document.getElementById('debug');
+  const startBtn    = document.getElementById('start-btn');
+  const stopBtn     = document.getElementById('stop-btn');
+  const overlay     = document.getElementById('vf-overlay');
+  const placeholder = document.getElementById('placeholder');
+  const resultBox   = document.getElementById('result');
+  const resultTag   = document.getElementById('result-tag');
+  const dellLink    = document.getElementById('dell-link');
 
-  const video      = document.getElementById('video');
-  const canvas     = document.getElementById('canvas');
-  const ctx        = canvas.getContext('2d', { willReadFrequently: true });
-  const statusEl   = document.getElementById('status');
-  const startBtn   = document.getElementById('start-btn');
-  const stopBtn    = document.getElementById('stop-btn');
-  const overlay    = document.getElementById('vf-overlay');
-  const placeholder= document.getElementById('placeholder');
-  const resultBox  = document.getElementById('result');
-  const resultTag  = document.getElementById('result-tag');
-  const dellLink   = document.getElementById('dell-link');
+  let stream   = null;
+  let rafId    = null;
+  let detector = null;   // BarcodeDetector natif
+  let zxReader = null;   // ZXing fallback
+  let zxHints  = null;
+  let zxLib    = null;
+  let method   = 'none';
 
   /* ── URL Dell ── */
   function buildUrl(tag) {
-    // URL directe sans encodage — Dell redirige automatiquement
-    return 'https://www.dell.com/support/home/fr-fr/product-support/servicetag/' + tag.toUpperCase() + '/overview';
-  }
-
-  /* ── Affichage résultat ── */
-  function showResult(tag) {
-    tag = tag.trim().toUpperCase();
-    resultTag.textContent  = tag;
-    dellLink.href          = buildUrl(tag);
-    resultBox.classList.add('visible');
-    setStatus('✓ Service Tag : ' + tag, 'ok');
-    stopScan();
-    // Redirige automatiquement
-    window.open(buildUrl(tag), '_blank');
+    return 'https://www.dell.com/support/home/fr-fr/product-support/servicetag/'
+           + encodeURIComponent(tag.toUpperCase()) + '/overview';
   }
 
   function setStatus(msg, cls) {
-    statusEl.textContent  = msg;
-    statusEl.className    = cls || '';
+    statusEl.textContent = msg;
+    statusEl.className   = cls || '';
   }
 
-  /* ── Décodage frame par frame ── */
-  let reader = null;
+  function setDebug(msg) {
+    debugEl.textContent = msg;
+  }
 
-  function initReader() {
-    if (!window.ZXingBrowser && !window.ZXing) return null;
+  /* ── Résultat ── */
+  function showResult(raw) {
+    const tag = raw.trim().toUpperCase();
+    resultTag.textContent = tag;
+    dellLink.href = buildUrl(tag);
+    resultBox.classList.add('visible');
+    setStatus('✓ Service Tag : ' + tag, 'ok');
+    setDebug('Méthode : ' + method);
+    stopScan();
+    window.open(buildUrl(tag), '_blank');
+  }
+
+  /* ── Init BarcodeDetector natif (Chrome Android) ── */
+  function initNative() {
+    if (!('BarcodeDetector' in window)) return false;
     try {
-      // ZXing library
-      const Lib = window.ZXing || window.ZXingBrowser;
-      const formats = [
-        Lib.BarcodeFormat.CODE_39,
-        Lib.BarcodeFormat.CODE_128,
-        Lib.BarcodeFormat.CODE_93,
-        Lib.BarcodeFormat.EAN_13,
-        Lib.BarcodeFormat.EAN_8,
-      ];
-      hints = new Map();
-      hints.set(Lib.DecodeHintType.POSSIBLE_FORMATS, formats);
-      hints.set(Lib.DecodeHintType.TRY_HARDER, true);
-      return new Lib.MultiFormatReader();
-    } catch(e) {
-      return null;
-    }
+      detector = new BarcodeDetector({
+        formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'code_93',
+                  'data_matrix', 'qr_code', 'pdf417']
+      });
+      method = 'BarcodeDetector (natif)';
+      return true;
+    } catch(e) { return false; }
   }
 
-  function decodeFrame() {
-    if (!stream || !reader) return;
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-      rafId = requestAnimationFrame(decodeFrame);
+  /* ── Init ZXing (fallback) ── */
+  function initZXing() {
+    zxLib = window.ZXing || window.ZXingBrowser || null;
+    if (!zxLib) return false;
+    try {
+      const formats = [
+        zxLib.BarcodeFormat.CODE_39,
+        zxLib.BarcodeFormat.CODE_128,
+        zxLib.BarcodeFormat.CODE_93,
+        zxLib.BarcodeFormat.EAN_13,
+        zxLib.BarcodeFormat.EAN_8,
+      ];
+      zxHints = new Map();
+      zxHints.set(zxLib.DecodeHintType.POSSIBLE_FORMATS, formats);
+      zxHints.set(zxLib.DecodeHintType.TRY_HARDER, true);
+      zxReader = new zxLib.MultiFormatReader();
+      method = 'ZXing (fallback)';
+      return true;
+    } catch(e) { return false; }
+  }
+
+  /* ── Décodage natif ── */
+  async function decodeNative() {
+    if (!stream) return;
+    try {
+      const results = await detector.detect(video);
+      if (results && results.length > 0) {
+        const val = results[0].rawValue;
+        if (val && val.length >= 4) { showResult(val); return; }
+      }
+    } catch(_) {}
+    rafId = requestAnimationFrame(decodeNative);
+  }
+
+  /* ── Décodage ZXing frame par frame ── */
+  function decodeZXing() {
+    if (!stream) return;
+    if (video.readyState < video.HAVE_ENOUGH_DATA) {
+      rafId = requestAnimationFrame(decodeZXing);
       return;
     }
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    if (!w || !h) { rafId = requestAnimationFrame(decodeZXing); return; }
 
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
+    canvas.width  = w;
+    canvas.height = h;
+    ctx.drawImage(video, 0, 0, w, h);
 
     try {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const Lib = window.ZXing || window.ZXingBrowser;
-      const luminance = new Lib.RGBLuminanceSource(imageData.data, canvas.width, canvas.height);
-      const bitmap    = new Lib.BinaryBitmap(new Lib.HybridBinarizer(luminance));
-      const result    = reader.decode(bitmap, hints);
-      if (result && result.getText().length >= 5) {
-        showResult(result.getText());
-        return;
+      const imgData  = ctx.getImageData(0, 0, w, h);
+      const lum      = new zxLib.RGBLuminanceSource(imgData.data, w, h);
+      const bitmap   = new zxLib.BinaryBitmap(new zxLib.HybridBinarizer(lum));
+      const result   = zxReader.decode(bitmap, zxHints);
+      if (result) {
+        const val = result.getText();
+        if (val && val.length >= 4) { showResult(val); return; }
       }
-    } catch (_) { /* pas de code dans cette frame */ }
-
-    rafId = requestAnimationFrame(decodeFrame);
+    } catch(_) {}
+    rafId = requestAnimationFrame(decodeZXing);
   }
 
   /* ── Démarrer ── */
   window.startScan = async function () {
     resultBox.classList.remove('visible');
     setStatus('Accès à la caméra…');
+    setDebug('');
     startBtn.disabled = true;
 
+    // Contraintes optimisées pour lire les codes-barres sur mobile
     const constraints = {
       video: {
         facingMode: { ideal: 'environment' },
-        width:  { ideal: 1280 },
-        height: { ideal: 720 }
+        width:      { ideal: 1920 },
+        height:     { ideal: 1080 },
+        focusMode:  { ideal: 'continuous' }
       }
     };
 
     try {
       stream = await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (e) {
-      // Fallback : n'importe quelle caméra
+    } catch(e) {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      } catch (e2) {
-        setStatus('Caméra refusée : ' + e2.message, 'err');
-        startBtn.disabled = false;
-        return;
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      } catch(e2) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        } catch(e3) {
+          setStatus('Caméra refusée : ' + e3.message, 'err');
+          startBtn.disabled = false;
+          return;
+        }
       }
     }
 
     video.srcObject = stream;
+    await new Promise(r => { video.onloadedmetadata = r; });
     await video.play().catch(() => {});
+
+    // Active l'autofocus continu si disponible
+    try {
+      const track = stream.getVideoTracks()[0];
+      await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+    } catch(_) {}
 
     placeholder.style.display = 'none';
     overlay.style.display     = 'flex';
     startBtn.style.display    = 'none';
     stopBtn.style.display     = 'block';
-    setStatus('Pointez vers le code-barres du serveur…');
+    setStatus('Pointez vers le code-barres…');
 
-    reader = initReader();
-    if (!reader) {
-      setStatus('Bibliothèque non chargée, réessayez dans 2s', 'err');
-      setTimeout(() => { reader = initReader(); if(reader) { setStatus('Prêt — pointez vers le code-barres'); decodeFrame(); } }, 2000);
-      return;
+    // Choisit la méthode de décodage
+    if (initNative()) {
+      setDebug('Moteur : natif (BarcodeDetector)');
+      decodeNative();
+    } else if (initZXing()) {
+      setDebug('Moteur : ZXing');
+      decodeZXing();
+    } else {
+      // ZXing pas encore chargé, on attend
+      setDebug('Chargement du moteur…');
+      setTimeout(() => {
+        if (initNative()) {
+          setDebug('Moteur : natif');
+          decodeNative();
+        } else if (initZXing()) {
+          setDebug('Moteur : ZXing (chargé)');
+          decodeZXing();
+        } else {
+          setStatus('Moteur de scan indisponible. Utilisez la saisie manuelle.', 'err');
+        }
+      }, 2500);
     }
-    decodeFrame();
   };
 
   /* ── Arrêter ── */
@@ -438,10 +411,11 @@
     stopBtn.style.display     = 'none';
   };
 
-  /* ── Manuel ── */
+  /* ── Saisie manuelle ── */
   window.goManual = function () {
     const v = document.getElementById('tag-input').value.trim();
     if (v.length < 4) { setStatus('Entrez au moins 4 caractères', 'err'); return; }
+    method = 'manuel';
     showResult(v);
   };
 
@@ -451,5 +425,9 @@
 
 })();
 </script>
+
+<!-- ZXing en fallback si BarcodeDetector absent (iPhone, Firefox) -->
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
+
 </body>
 </html>
