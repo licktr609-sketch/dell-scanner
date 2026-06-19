@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>Scanner Dell</title>
+  <title>Scanner Dell - Service Tag</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -24,38 +24,78 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
-    .logo-text { font-size: 17px; font-weight: 600; color: #111; }
-    .logo-sub  { font-size: 12px; color: #888; margin-top: 1px; }
     .logo-icon {
-      width: 32px; height: 32px; background: #0076CE;
+      width: 36px; height: 36px; background: #0076CE;
       border-radius: 8px; display: flex; align-items: center;
-      justify-content: center; color: #fff; font-size: 18px; font-weight: 800;
+      justify-content: center; color: #fff; font-size: 20px; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .logo-text { font-size: 17px; font-weight: 600; color: #111; }
+    .logo-sub  { font-size: 12px; color: #888; }
+
+    #os-badge {
+      display: inline-block;
+      font-size: 11px; padding: 3px 10px;
+      border-radius: 20px; margin-bottom: 1rem;
+      background: #e8f4ff; color: #0076CE;
+      border: 1px solid #b3d4f5;
     }
 
-    #scanner-wrap {
+    #reader {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+      background: #111;
+      min-height: 60px;
+    }
+    #reader__dashboard_section_csr span,
+    #reader__dashboard_section_swaplink,
+    #reader__filescan_input { display: none !important; }
+
+    #ios-zone {
+      display: none;
+      width: 100%;
+      margin-bottom: 0.75rem;
+    }
+    #ios-preview-box {
       width: 100%;
       aspect-ratio: 4/3;
       background: #111;
       border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.75rem;
       position: relative;
     }
-    /* Dynamsoft injecte sa vidéo ici */
-    #scanner-wrap > div { width: 100% !important; height: 100% !important; }
-
-    #placeholder {
-      position: absolute; inset: 0;
+    #ios-preview {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+    #ios-placeholder {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 10px; color: #777; font-size: 14px;
-      pointer-events: none;
+      gap: 8px; color: #777; font-size: 14px;
     }
-    #placeholder .icon { font-size: 40px; opacity: 0.5; }
+    #ios-placeholder .icon { font-size: 36px; opacity: 0.5; }
+
+    #ios-input { display: none; }
+    .btn-photo {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; width: 100%; padding: 14px;
+      background: #0076CE; color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 500; cursor: pointer;
+    }
+
+    #decode-canvas { display: none; }
 
     #status {
       text-align: center; font-size: 13px; color: #888;
-      margin: 0 0 0.75rem; min-height: 18px;
+      margin-bottom: 0.75rem; min-height: 18px;
     }
     #status.ok  { color: #2e7d32; font-weight: 500; }
     #status.err { color: #c62828; }
@@ -64,7 +104,6 @@
       display: block; width: 100%; padding: 13px;
       border: none; border-radius: 10px;
       font-size: 15px; font-weight: 500; cursor: pointer;
-      transition: opacity .15s;
     }
     .btn:disabled { opacity: 0.4; cursor: default; }
     .btn-primary   { background: #0076CE; color: #fff; }
@@ -98,7 +137,7 @@
     }
     #result.visible { display: block; }
     .r-label { font-size: 11px; color:#888; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
-    .r-value { font-size: 26px; font-weight:700; color:#111; letter-spacing:3px; margin-bottom:1rem; }
+    .r-value { font-size: 26px; font-weight:700; color:#111; letter-spacing:3px; margin-bottom:1rem; word-break: break-all; }
     .btn-dell {
       display: flex; align-items: center; justify-content: center;
       width: 100%; padding: 13px;
@@ -114,11 +153,21 @@
       font-size: 14px; cursor: pointer; margin-top: 8px;
       text-align: center;
     }
+
+    .tip {
+      font-size: 12px; color: #999;
+      text-align: center; margin-top: 6px;
+      line-height: 1.5;
+    }
+    .help-btn {
+      background: none; border: none; color: #0076CE;
+      font-size: 13px; cursor: pointer; margin-top: 0.5rem;
+      text-align: center; width: 100%;
+    }
   </style>
 </head>
 <body>
 <div class="card">
-
   <div class="logo">
     <div class="logo-icon">D</div>
     <div>
@@ -127,23 +176,45 @@
     </div>
   </div>
 
-  <div id="scanner-wrap">
-    <div id="dce-video-container"></div>
-    <div id="placeholder">
-      <div class="icon">▦</div>
-      Caméra inactive
-    </div>
+  <div id="os-badge">Détection de l'appareil…</div>
+
+  <!-- Android : scanner en direct -->
+  <div id="android-zone">
+    <div id="reader"></div>
+    <p id="status">Appuyez sur Démarrer pour scanner</p>
+    <button class="btn btn-primary" id="start-btn" onclick="startAndroid()">📷 Démarrer la caméra</button>
+    <button class="btn btn-secondary" id="stop-btn" style="display:none" onclick="stopAndroid()">⏹ Arrêter</button>
   </div>
 
-  <p id="status">Appuyez sur Démarrer pour scanner</p>
-
-  <button class="btn btn-primary" id="start-btn" onclick="startScan()">📷 Démarrer la caméra</button>
-  <button class="btn btn-secondary" id="stop-btn" style="display:none" onclick="stopScan()">⏹ Arrêter</button>
+  <!-- iPhone : photo + décodage -->
+  <div id="ios-zone">
+    <div id="ios-preview-box">
+      <img id="ios-preview" alt="aperçu"/>
+      <div id="ios-placeholder">
+        <div class="icon">📷</div>
+        Prenez une photo du code-barres
+      </div>
+    </div>
+    <p id="status-ios" style="text-align:center;font-size:13px;color:#888;margin-bottom:0.75rem;min-height:18px;"></p>
+    <input type="file" id="ios-input" accept="image/*" capture="environment"/>
+    <label for="ios-input" class="btn-photo">
+      📷 Prendre une photo du code-barres
+    </label>
+    <p class="tip">Cadrez bien le code-barres, aussi proche que possible</p>
+    <canvas id="decode-canvas"></canvas>
+  </div>
 
   <div class="sep">ou saisie manuelle</div>
   <div class="manual-row">
     <input id="tag-input" type="text" placeholder="Ex : ABC1234" maxlength="12"/>
     <button onclick="goManual()">→</button>
+  </div>
+  
+  <button class="help-btn" onclick="toggleHelp()">❓ Aide</button>
+  <div id="help-text" style="display:none; margin-top:0.5rem; font-size:12px; color:#666;">
+    <p>1. Sur Android : autorisez l'accès à la caméra et pointez le code-barres.</p>
+    <p>2. Sur iPhone : prenez une photo du code-barres.</p>
+    <p>3. Sinon, saisissez manuellement le Service Tag.</p>
   </div>
 
   <div id="result">
@@ -152,128 +223,231 @@
     <a id="dell-link" class="btn-dell" target="_blank" rel="noopener">Ouvrir Dell Support →</a>
     <button class="btn-rescan" onclick="rescan()">🔄 Scanner à nouveau</button>
   </div>
-
 </div>
 
-<!-- Dynamsoft Barcode Reader — moteur JS le plus puissant du marché -->
-<script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.6.42/dist/dbr.js"></script>
-
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 (function() {
   'use strict';
 
-  // Clé de licence trial Dynamsoft (valide 7 jours par domaine)
-  // Remplace par ta propre clé sur https://www.dynamsoft.com/customer/license/trialLicense
-  Dynamsoft.DBR.BarcodeReader.licenseServer = ['https://mdls.dynamsoft.com'];
-  Dynamsoft.DBR.BarcodeReader.license = 'DLS2eyJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSJ9';
+  // Détection iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  let scanner = null;
+  const badge = document.getElementById('os-badge');
 
-  function buildUrl(tag) {
-    return 'https://www.dell.com/support/home/fr-fr/product-support/servicetag/'
-           + encodeURIComponent(tag.toUpperCase()) + '/overview';
+  if (isIOS) {
+    badge.textContent = '🍎 Mode iPhone — capture photo';
+    document.getElementById('android-zone').style.display = 'none';
+    document.getElementById('ios-zone').style.display     = 'block';
+    initIOS();
+  } else {
+    badge.textContent = '🤖 Mode Android — caméra en direct';
+    document.getElementById('android-zone').style.display = 'block';
+    document.getElementById('ios-zone').style.display     = 'none';
   }
 
-  function setStatus(msg, cls) {
-    const el = document.getElementById('status');
-    el.textContent = msg;
-    el.className   = cls || '';
+  // URL Dell
+  function buildUrl(tag) {
+    return 'https://www.dell.com/support/home/fr-fr/product-support/servicetag/' +
+           encodeURIComponent(tag.toUpperCase()) + '/overview';
   }
 
   function showResult(raw) {
-    const tag = raw.trim().toUpperCase();
+    const tag = raw.trim().replace(/\s+/g,'').toUpperCase();
+    if (tag.length < 4) return;
     document.getElementById('result-tag').textContent = tag;
     document.getElementById('dell-link').href = buildUrl(tag);
     document.getElementById('result').classList.add('visible');
-    setStatus('✓ Service Tag : ' + tag, 'ok');
-    stopScan();
-    window.open(buildUrl(tag), '_blank');
+    setTimeout(() => window.open(buildUrl(tag), '_blank'), 300);
   }
 
-  window.startScan = async function() {
+  // Android : html5-qrcode live
+  let qr = null;
+  let scanning = false;
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('status');
+    if (el) { el.textContent = msg; el.className = cls || ''; }
+  }
+
+  window.startAndroid = async function() {
     document.getElementById('result').classList.remove('visible');
-    setStatus('Initialisation du scanner…');
+    setStatus('Recherche de la caméra…');
     document.getElementById('start-btn').disabled = true;
-    document.getElementById('placeholder').style.display = 'none';
+
+    qr = new Html5Qrcode('reader', { verbose: false });
+
+    let cameraId = { facingMode: 'environment' };
+    try {
+      const cams = await Html5Qrcode.getCameras();
+      if (cams && cams.length > 0) {
+        const back = cams.find(c => /back|rear|arrière|environment/i.test(c.label));
+        cameraId = back ? back.id : cams[cams.length - 1].id;
+      }
+    } catch(_) {}
+
+    const cfg = {
+      fps: 15,
+      qrbox: (w, h) => ({ width: Math.floor(w * 0.88), height: Math.floor(h * 0.38) }),
+      aspectRatio: 1.5,
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.CODABAR,
+      ],
+      experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+      videoConstraints: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920 }, height: { ideal: 1080 }
+      }
+    };
 
     try {
-      if (!scanner) {
-        scanner = await Dynamsoft.DBR.BarcodeScanner.createInstance();
-
-        // Config : codes-barres 1D uniquement (plus rapide)
-        await scanner.updateRuntimeSettings('speed');
-        const settings = await scanner.getRuntimeSettings();
-        settings.barcodeFormatIds =
-          Dynamsoft.DBR.EnumBarcodeFormat.BF_CODE_39   |
-          Dynamsoft.DBR.EnumBarcodeFormat.BF_CODE_128  |
-          Dynamsoft.DBR.EnumBarcodeFormat.BF_CODE_93   |
-          Dynamsoft.DBR.EnumBarcodeFormat.BF_EAN_13    |
-          Dynamsoft.DBR.EnumBarcodeFormat.BF_EAN_8     |
-          Dynamsoft.DBR.EnumBarcodeFormat.BF_ITF;
-        settings.expectedBarcodesCount = 1;
-        await scanner.updateRuntimeSettings(settings);
-
-        scanner.onFrameRead = results => {
-          if (results && results.length > 0) {
-            const val = results[0].barcodeText;
-            if (val && val.replace(/\s/g,'').length >= 4) {
-              showResult(val.replace(/\s/g,''));
-            }
-          }
-        };
-
-        // Injecte la vidéo dans notre conteneur
-        scanner.setUIElement(document.getElementById('dce-video-container'));
-      }
-
-      await scanner.open();
-
-      // Force caméra arrière
-      try {
-        const cameras = await scanner.getAllCameras();
-        const back = cameras.find(c =>
-          c.label.toLowerCase().includes('back') ||
-          c.label.toLowerCase().includes('arrière') ||
-          c.label.toLowerCase().includes('rear') ||
-          c.label.toLowerCase().includes('environment')
-        );
-        if (back) await scanner.setCurrentCamera(back);
-        else if (cameras.length > 1) await scanner.setCurrentCamera(cameras[cameras.length - 1]);
-
-        // Résolution maximale
-        await scanner.setResolution(1280, 720);
-      } catch(_) {}
-
+      await qr.start(cameraId, cfg, (text) => {
+        if (!scanning) return;
+        scanning = false;
+        showResult(text);
+        stopAndroid();
+      }, () => {});
+      scanning = true;
       document.getElementById('start-btn').style.display = 'none';
       document.getElementById('stop-btn').style.display  = 'block';
-      setStatus('Pointez vers le code-barres du serveur…');
-
+      setStatus('Pointez le code-barres dans le cadre…');
     } catch(e) {
-      setStatus('Erreur : ' + e.message, 'err');
+      setStatus('Erreur caméra : ' + (e.message || 'Accès refusé'), 'err');
       document.getElementById('start-btn').disabled = false;
-      document.getElementById('placeholder').style.display = 'flex';
     }
   };
 
-  window.stopScan = async function() {
-    if (scanner) {
-      try { await scanner.close(); } catch(_) {}
+  window.stopAndroid = async function() {
+    scanning = false;
+    if (qr) {
+      try { if (qr.isScanning) await qr.stop(); qr.clear(); } catch(_) {}
+      qr = null;
     }
     document.getElementById('start-btn').style.display = 'block';
     document.getElementById('start-btn').disabled      = false;
     document.getElementById('stop-btn').style.display  = 'none';
-    document.getElementById('placeholder').style.display = 'flex';
-    setStatus('Scanner arrêté.');
+    if (!document.getElementById('result').classList.contains('visible')) {
+      setStatus('Scanner arrêté.');
+    }
   };
 
-  window.rescan = async function() {
-    document.getElementById('result').classList.remove('visible');
-    await window.startScan();
-  };
+  // iOS : capture photo + ZXing
+  function setStatusIOS(msg, cls) {
+    const el = document.getElementById('status-ios');
+    if (el) { el.textContent = msg; el.className = cls || ''; }
+  }
 
+  function initIOS() {
+    const input = document.getElementById('ios-input');
+    input.addEventListener('change', async function() {
+      const file = this.files[0];
+      if (!file) return;
+
+      setStatusIOS('Analyse de la photo…');
+
+      // Affiche la prévisualisation
+      const preview = document.getElementById('ios-preview');
+      const placeholder = document.getElementById('ios-placeholder');
+      const objUrl = URL.createObjectURL(file);
+      preview.src = objUrl;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+
+      // Tente BarcodeDetector natif d'abord (iOS 17+ Safari)
+      if ('BarcodeDetector' in window) {
+        try {
+          const bd = new BarcodeDetector({
+            formats: ['code_39','code_128','ean_13','ean_8','code_93','itf','codabar']
+          });
+          const img = new Image();
+          img.src = objUrl;
+          await img.decode();
+          const results = await bd.detect(img);
+          if (results && results.length > 0) {
+            setStatusIOS('✓ Détecté (natif)');
+            showResult(results[0].rawValue);
+            return;
+          }
+        } catch(_) {}
+      }
+
+      // Fallback : html5-qrcode décode le fichier image
+      try {
+        const decoder = new Html5Qrcode('decode-canvas', { verbose: false });
+        const res = await decoder.scanFile(file, false);
+        decoder.clear();
+        if (res) {
+          setStatusIOS('✓ Détecté');
+          showResult(res);
+          return;
+        }
+      } catch(_) {}
+
+      // Fallback ZXing sur canvas haute résolution
+      try {
+        const decoded = await decodeWithZXing(file);
+        if (decoded) {
+          setStatusIOS('✓ Détecté (ZXing)');
+          showResult(decoded);
+          return;
+        }
+      } catch(_) {}
+
+      setStatusIOS('Code non détecté — rapprochez-vous et réessayez', 'err');
+      input.value = '';
+    });
+  }
+
+  // ZXing sur image via canvas
+  function decodeWithZXing(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        try {
+          const canvas = document.getElementById('decode-canvas');
+          const maxW = 1600;
+          const scale = Math.min(1, maxW / img.naturalWidth);
+          canvas.width  = img.naturalWidth  * scale;
+          canvas.height = img.naturalHeight * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+
+          const Lib = window.ZXing || window.ZXingBrowser;
+          if (!Lib) { reject('ZXing absent'); return; }
+
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const lum    = new Lib.RGBLuminanceSource(imgData.data, canvas.width, canvas.height);
+          const bitmap = new Lib.BinaryBitmap(new Lib.HybridBinarizer(lum));
+          const hints  = new Map();
+          hints.set(Lib.DecodeHintType.POSSIBLE_FORMATS, [
+            Lib.BarcodeFormat.CODE_39, Lib.BarcodeFormat.CODE_128,
+            Lib.BarcodeFormat.CODE_93, Lib.BarcodeFormat.EAN_13,
+            Lib.BarcodeFormat.EAN_8,   Lib.BarcodeFormat.ITF,
+          ]);
+          hints.set(Lib.DecodeHintType.TRY_HARDER, true);
+          const reader = new Lib.MultiFormatReader();
+          const result = reader.decode(bitmap, hints);
+          resolve(result ? result.getText() : null);
+        } catch(e) { reject(e); }
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  // Saisie manuelle
   window.goManual = function() {
     const v = document.getElementById('tag-input').value.trim();
-    if (v.length < 4) { setStatus('Entrez au moins 4 caractères', 'err'); return; }
+    if (v.length < 4) return;
     showResult(v);
   };
 
@@ -281,7 +455,34 @@
     if (e.key === 'Enter') window.goManual();
   });
 
+  window.rescan = function() {
+    document.getElementById('result').classList.remove('visible');
+    if (isIOS) {
+      document.getElementById('ios-input').value = '';
+      document.getElementById('ios-preview').style.display = 'none';
+      document.getElementById('ios-placeholder').style.display = 'flex';
+      setStatusIOS('');
+    }
+  };
+
+  // Aide
+  window.toggleHelp = function() {
+    const helpText = document.getElementById('help-text');
+    helpText.style.display = helpText.style.display === 'none' ? 'block' : 'none';
+  };
+
+  // Charger ZXing dynamiquement si nécessaire
+  if (!('BarcodeDetector' in window)) {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js';
+    script.onload = () => console.log('ZXing chargé');
+    document.head.appendChild(script);
+  }
+
 })();
 </script>
+
+<!-- ZXing fallback -->
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
 </body>
 </html>
