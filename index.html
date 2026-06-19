@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title>Scanner Dell</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,83 +24,61 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
-    .logo svg { width: 32px; height: 32px; }
     .logo-text { font-size: 17px; font-weight: 600; color: #111; }
     .logo-sub  { font-size: 12px; color: #888; margin-top: 1px; }
+    .logo-icon {
+      width: 32px; height: 32px; background: #0076CE;
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; color: #fff; font-size: 18px; font-weight: 800;
+    }
 
-    #viewfinder {
-      position: relative;
+    #scanner-wrap {
       width: 100%;
       aspect-ratio: 4/3;
       background: #111;
       border-radius: 12px;
       overflow: hidden;
       margin-bottom: 1rem;
-    }
-    #video { width: 100%; height: 100%; object-fit: cover; display: block; }
-    #canvas { display: none; }
-
-    .vf-overlay {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .vf-box {
-      width: 85%; height: 30%;
-      border: 2px solid rgba(255,255,255,0.7);
-      border-radius: 8px;
       position: relative;
     }
-    .vf-box::before, .vf-box::after,
-    .vf-box .c2::before, .vf-box .c2::after {
-      content: ''; position: absolute;
-      width: 20px; height: 20px;
-      border-color: #4A90E2; border-style: solid;
-    }
-    .vf-box::before     { top:-2px; left:-2px;   border-width:3px 0 0 3px; border-radius:6px 0 0 0; }
-    .vf-box::after      { top:-2px; right:-2px;  border-width:3px 3px 0 0; border-radius:0 6px 0 0; }
-    .vf-box .c2::before { bottom:-2px; left:-2px;  border-width:0 0 3px 3px; border-radius:0 0 0 6px; }
-    .vf-box .c2::after  { bottom:-2px; right:-2px; border-width:0 3px 3px 0; border-radius:0 0 6px 0; }
-    .scan-line {
-      position: absolute; left: 4px; right: 4px; height: 2px;
-      background: linear-gradient(90deg, transparent, #4A90E2, transparent);
-      animation: scanAnim 1.8s ease-in-out infinite;
-    }
-    @keyframes scanAnim {
-      0%,100% { top: 4px; opacity:0.4; }
-      50%      { top: calc(100% - 6px); opacity:1; }
-    }
-    .vf-hint {
-      position: absolute; bottom: 8px; left:0; right:0;
-      text-align: center; font-size: 11px;
-      color: rgba(255,255,255,0.8);
-    }
+    /* Dynamsoft injecte sa vidéo ici */
+    #scanner-wrap > div { width: 100% !important; height: 100% !important; }
+
     #placeholder {
-      position: absolute; inset:0;
+      position: absolute; inset: 0;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 10px; color: #aaa; font-size: 14px;
+      gap: 10px; color: #777; font-size: 14px;
+      pointer-events: none;
     }
+    #placeholder .icon { font-size: 40px; opacity: 0.5; }
+
+    #status {
+      text-align: center; font-size: 13px; color: #888;
+      margin: 0 0 0.75rem; min-height: 18px;
+    }
+    #status.ok  { color: #2e7d32; font-weight: 500; }
+    #status.err { color: #c62828; }
 
     .btn {
       display: block; width: 100%; padding: 13px;
       border: none; border-radius: 10px;
       font-size: 15px; font-weight: 500; cursor: pointer;
+      transition: opacity .15s;
     }
+    .btn:disabled { opacity: 0.4; cursor: default; }
     .btn-primary   { background: #0076CE; color: #fff; }
-    .btn-secondary { background: #f0f0f0; color: #333; margin-top: 8px; }
-    .btn:disabled  { opacity: 0.45; cursor: default; }
+    .btn-secondary { background: #eee; color: #333; margin-top: 8px; }
 
     .sep {
       display: flex; align-items: center; gap: 10px;
       margin: 1rem 0; color: #bbb; font-size: 12px;
     }
-    .sep::before, .sep::after {
-      content:''; flex:1; height:1px; background:#e5e5e5;
-    }
+    .sep::before, .sep::after { content:''; flex:1; height:1px; background:#e5e5e5; }
 
     .manual-row { display: flex; gap: 8px; }
     .manual-row input {
-      flex:1; padding: 11px 12px;
+      flex: 1; padding: 11px 12px;
       border: 1.5px solid #ddd; border-radius: 10px;
       font-size: 15px; outline: none;
       text-transform: uppercase; letter-spacing: 1px;
@@ -113,21 +91,14 @@
       font-size: 15px; font-weight: 500; cursor: pointer;
     }
 
-    #status {
-      text-align: center; font-size: 13px; color: #888;
-      margin: 0.75rem 0 0; min-height: 18px;
-    }
-    #status.ok  { color: #2e7d32; }
-    #status.err { color: #c62828; }
-
     #result {
       display: none; margin-top: 1rem;
-      background: #f7faff; border: 1.5px solid #cce0f5;
+      background: #f0f7ff; border: 1.5px solid #b3d4f5;
       border-radius: 12px; padding: 1rem;
     }
     #result.visible { display: block; }
-    .result-label { font-size: 11px; color:#888; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
-    .result-value { font-size: 24px; font-weight:700; color:#111; letter-spacing:2px; margin-bottom:1rem; }
+    .r-label { font-size: 11px; color:#888; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .r-value { font-size: 26px; font-weight:700; color:#111; letter-spacing:3px; margin-bottom:1rem; }
     .btn-dell {
       display: flex; align-items: center; justify-content: center;
       width: 100%; padding: 13px;
@@ -136,10 +107,12 @@
       font-size: 15px; font-weight: 500;
       cursor: pointer; text-decoration: none;
     }
-
-    #debug {
-      margin-top: 8px; font-size: 11px; color: #aaa;
-      text-align: center; min-height: 16px;
+    .btn-rescan {
+      display: block; width: 100%; padding: 10px;
+      background: transparent; color: #0076CE;
+      border: 1.5px solid #0076CE; border-radius: 10px;
+      font-size: 14px; cursor: pointer; margin-top: 8px;
+      text-align: center;
     }
   </style>
 </head>
@@ -147,38 +120,22 @@
 <div class="card">
 
   <div class="logo">
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" rx="8" fill="#0076CE"/>
-      <text x="5" y="23" font-size="18" font-weight="800" fill="white" font-family="Arial">D</text>
-    </svg>
+    <div class="logo-icon">D</div>
     <div>
       <div class="logo-text">Scanner Dell</div>
       <div class="logo-sub">Support Serveur</div>
     </div>
   </div>
 
-  <div id="viewfinder">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
-    <div class="vf-overlay" id="vf-overlay" style="display:none">
-      <div class="vf-box">
-        <div class="c2"></div>
-        <div class="scan-line"></div>
-      </div>
-      <div class="vf-hint">Alignez le code-barres dans le cadre</div>
-    </div>
+  <div id="scanner-wrap">
+    <div id="dce-video-container"></div>
     <div id="placeholder">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.2">
-        <rect x="2" y="6" width="1.5" height="12"/><rect x="5" y="6" width="3" height="12"/>
-        <rect x="10" y="6" width="1.5" height="12"/><rect x="13" y="6" width="2" height="12"/>
-        <rect x="17" y="6" width="1.5" height="12"/><rect x="20" y="6" width="1.5" height="12"/>
-      </svg>
+      <div class="icon">▦</div>
       Caméra inactive
     </div>
   </div>
 
   <p id="status">Appuyez sur Démarrer pour scanner</p>
-  <div id="debug"></div>
 
   <button class="btn btn-primary" id="start-btn" onclick="startScan()">📷 Démarrer la caméra</button>
   <button class="btn btn-secondary" id="stop-btn" style="display:none" onclick="stopScan()">⏹ Arrêter</button>
@@ -190,232 +147,133 @@
   </div>
 
   <div id="result">
-    <div class="result-label">Service Tag détecté</div>
-    <div class="result-value" id="result-tag">—</div>
-    <a id="dell-link" class="btn-dell" target="_blank" rel="noopener">
-      Ouvrir sur Dell Support →
-    </a>
+    <div class="r-label">Service Tag détecté</div>
+    <div class="r-value" id="result-tag">—</div>
+    <a id="dell-link" class="btn-dell" target="_blank" rel="noopener">Ouvrir Dell Support →</a>
+    <button class="btn-rescan" onclick="rescan()">🔄 Scanner à nouveau</button>
   </div>
 
 </div>
 
+<!-- Dynamsoft Barcode Reader — moteur JS le plus puissant du marché -->
+<script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.6.42/dist/dbr.js"></script>
+
 <script>
-(function () {
+(function() {
   'use strict';
 
-  const video       = document.getElementById('video');
-  const canvas      = document.getElementById('canvas');
-  const ctx         = canvas.getContext('2d', { willReadFrequently: true });
-  const statusEl    = document.getElementById('status');
-  const debugEl     = document.getElementById('debug');
-  const startBtn    = document.getElementById('start-btn');
-  const stopBtn     = document.getElementById('stop-btn');
-  const overlay     = document.getElementById('vf-overlay');
-  const placeholder = document.getElementById('placeholder');
-  const resultBox   = document.getElementById('result');
-  const resultTag   = document.getElementById('result-tag');
-  const dellLink    = document.getElementById('dell-link');
+  // Clé de licence trial Dynamsoft (valide 7 jours par domaine)
+  // Remplace par ta propre clé sur https://www.dynamsoft.com/customer/license/trialLicense
+  Dynamsoft.DBR.BarcodeReader.licenseServer = ['https://mdls.dynamsoft.com'];
+  Dynamsoft.DBR.BarcodeReader.license = 'DLS2eyJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSJ9';
 
-  let stream   = null;
-  let rafId    = null;
-  let detector = null;   // BarcodeDetector natif
-  let zxReader = null;   // ZXing fallback
-  let zxHints  = null;
-  let zxLib    = null;
-  let method   = 'none';
+  let scanner = null;
 
-  /* ── URL Dell ── */
   function buildUrl(tag) {
     return 'https://www.dell.com/support/home/fr-fr/product-support/servicetag/'
            + encodeURIComponent(tag.toUpperCase()) + '/overview';
   }
 
   function setStatus(msg, cls) {
-    statusEl.textContent = msg;
-    statusEl.className   = cls || '';
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className   = cls || '';
   }
 
-  function setDebug(msg) {
-    debugEl.textContent = msg;
-  }
-
-  /* ── Résultat ── */
   function showResult(raw) {
     const tag = raw.trim().toUpperCase();
-    resultTag.textContent = tag;
-    dellLink.href = buildUrl(tag);
-    resultBox.classList.add('visible');
+    document.getElementById('result-tag').textContent = tag;
+    document.getElementById('dell-link').href = buildUrl(tag);
+    document.getElementById('result').classList.add('visible');
     setStatus('✓ Service Tag : ' + tag, 'ok');
-    setDebug('Méthode : ' + method);
     stopScan();
     window.open(buildUrl(tag), '_blank');
   }
 
-  /* ── Init BarcodeDetector natif (Chrome Android) ── */
-  function initNative() {
-    if (!('BarcodeDetector' in window)) return false;
-    try {
-      detector = new BarcodeDetector({
-        formats: ['code_39', 'code_128', 'ean_13', 'ean_8', 'code_93',
-                  'data_matrix', 'qr_code', 'pdf417']
-      });
-      method = 'BarcodeDetector (natif)';
-      return true;
-    } catch(e) { return false; }
-  }
+  window.startScan = async function() {
+    document.getElementById('result').classList.remove('visible');
+    setStatus('Initialisation du scanner…');
+    document.getElementById('start-btn').disabled = true;
+    document.getElementById('placeholder').style.display = 'none';
 
-  /* ── Init ZXing (fallback) ── */
-  function initZXing() {
-    zxLib = window.ZXing || window.ZXingBrowser || null;
-    if (!zxLib) return false;
     try {
-      const formats = [
-        zxLib.BarcodeFormat.CODE_39,
-        zxLib.BarcodeFormat.CODE_128,
-        zxLib.BarcodeFormat.CODE_93,
-        zxLib.BarcodeFormat.EAN_13,
-        zxLib.BarcodeFormat.EAN_8,
-      ];
-      zxHints = new Map();
-      zxHints.set(zxLib.DecodeHintType.POSSIBLE_FORMATS, formats);
-      zxHints.set(zxLib.DecodeHintType.TRY_HARDER, true);
-      zxReader = new zxLib.MultiFormatReader();
-      method = 'ZXing (fallback)';
-      return true;
-    } catch(e) { return false; }
-  }
+      if (!scanner) {
+        scanner = await Dynamsoft.DBR.BarcodeScanner.createInstance();
 
-  /* ── Décodage natif ── */
-  async function decodeNative() {
-    if (!stream) return;
-    try {
-      const results = await detector.detect(video);
-      if (results && results.length > 0) {
-        const val = results[0].rawValue;
-        if (val && val.length >= 4) { showResult(val); return; }
+        // Config : codes-barres 1D uniquement (plus rapide)
+        await scanner.updateRuntimeSettings('speed');
+        const settings = await scanner.getRuntimeSettings();
+        settings.barcodeFormatIds =
+          Dynamsoft.DBR.EnumBarcodeFormat.BF_CODE_39   |
+          Dynamsoft.DBR.EnumBarcodeFormat.BF_CODE_128  |
+          Dynamsoft.DBR.EnumBarcodeFormat.BF_CODE_93   |
+          Dynamsoft.DBR.EnumBarcodeFormat.BF_EAN_13    |
+          Dynamsoft.DBR.EnumBarcodeFormat.BF_EAN_8     |
+          Dynamsoft.DBR.EnumBarcodeFormat.BF_ITF;
+        settings.expectedBarcodesCount = 1;
+        await scanner.updateRuntimeSettings(settings);
+
+        scanner.onFrameRead = results => {
+          if (results && results.length > 0) {
+            const val = results[0].barcodeText;
+            if (val && val.replace(/\s/g,'').length >= 4) {
+              showResult(val.replace(/\s/g,''));
+            }
+          }
+        };
+
+        // Injecte la vidéo dans notre conteneur
+        scanner.setUIElement(document.getElementById('dce-video-container'));
       }
-    } catch(_) {}
-    rafId = requestAnimationFrame(decodeNative);
-  }
 
-  /* ── Décodage ZXing frame par frame ── */
-  function decodeZXing() {
-    if (!stream) return;
-    if (video.readyState < video.HAVE_ENOUGH_DATA) {
-      rafId = requestAnimationFrame(decodeZXing);
-      return;
-    }
-    const w = video.videoWidth;
-    const h = video.videoHeight;
-    if (!w || !h) { rafId = requestAnimationFrame(decodeZXing); return; }
+      await scanner.open();
 
-    canvas.width  = w;
-    canvas.height = h;
-    ctx.drawImage(video, 0, 0, w, h);
-
-    try {
-      const imgData  = ctx.getImageData(0, 0, w, h);
-      const lum      = new zxLib.RGBLuminanceSource(imgData.data, w, h);
-      const bitmap   = new zxLib.BinaryBitmap(new zxLib.HybridBinarizer(lum));
-      const result   = zxReader.decode(bitmap, zxHints);
-      if (result) {
-        const val = result.getText();
-        if (val && val.length >= 4) { showResult(val); return; }
-      }
-    } catch(_) {}
-    rafId = requestAnimationFrame(decodeZXing);
-  }
-
-  /* ── Démarrer ── */
-  window.startScan = async function () {
-    resultBox.classList.remove('visible');
-    setStatus('Accès à la caméra…');
-    setDebug('');
-    startBtn.disabled = true;
-
-    // Contraintes optimisées pour lire les codes-barres sur mobile
-    const constraints = {
-      video: {
-        facingMode: { ideal: 'environment' },
-        width:      { ideal: 1920 },
-        height:     { ideal: 1080 },
-        focusMode:  { ideal: 'continuous' }
-      }
-    };
-
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-    } catch(e) {
+      // Force caméra arrière
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      } catch(e2) {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        } catch(e3) {
-          setStatus('Caméra refusée : ' + e3.message, 'err');
-          startBtn.disabled = false;
-          return;
-        }
-      }
-    }
+        const cameras = await scanner.getAllCameras();
+        const back = cameras.find(c =>
+          c.label.toLowerCase().includes('back') ||
+          c.label.toLowerCase().includes('arrière') ||
+          c.label.toLowerCase().includes('rear') ||
+          c.label.toLowerCase().includes('environment')
+        );
+        if (back) await scanner.setCurrentCamera(back);
+        else if (cameras.length > 1) await scanner.setCurrentCamera(cameras[cameras.length - 1]);
 
-    video.srcObject = stream;
-    await new Promise(r => { video.onloadedmetadata = r; });
-    await video.play().catch(() => {});
+        // Résolution maximale
+        await scanner.setResolution(1280, 720);
+      } catch(_) {}
 
-    // Active l'autofocus continu si disponible
-    try {
-      const track = stream.getVideoTracks()[0];
-      await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
-    } catch(_) {}
+      document.getElementById('start-btn').style.display = 'none';
+      document.getElementById('stop-btn').style.display  = 'block';
+      setStatus('Pointez vers le code-barres du serveur…');
 
-    placeholder.style.display = 'none';
-    overlay.style.display     = 'flex';
-    startBtn.style.display    = 'none';
-    stopBtn.style.display     = 'block';
-    setStatus('Pointez vers le code-barres…');
-
-    // Choisit la méthode de décodage
-    if (initNative()) {
-      setDebug('Moteur : natif (BarcodeDetector)');
-      decodeNative();
-    } else if (initZXing()) {
-      setDebug('Moteur : ZXing');
-      decodeZXing();
-    } else {
-      // ZXing pas encore chargé, on attend
-      setDebug('Chargement du moteur…');
-      setTimeout(() => {
-        if (initNative()) {
-          setDebug('Moteur : natif');
-          decodeNative();
-        } else if (initZXing()) {
-          setDebug('Moteur : ZXing (chargé)');
-          decodeZXing();
-        } else {
-          setStatus('Moteur de scan indisponible. Utilisez la saisie manuelle.', 'err');
-        }
-      }, 2500);
+    } catch(e) {
+      setStatus('Erreur : ' + e.message, 'err');
+      document.getElementById('start-btn').disabled = false;
+      document.getElementById('placeholder').style.display = 'flex';
     }
   };
 
-  /* ── Arrêter ── */
-  window.stopScan = function () {
-    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-    video.srcObject = null;
-    overlay.style.display     = 'none';
-    placeholder.style.display = 'flex';
-    startBtn.style.display    = 'block';
-    startBtn.disabled         = false;
-    stopBtn.style.display     = 'none';
+  window.stopScan = async function() {
+    if (scanner) {
+      try { await scanner.close(); } catch(_) {}
+    }
+    document.getElementById('start-btn').style.display = 'block';
+    document.getElementById('start-btn').disabled      = false;
+    document.getElementById('stop-btn').style.display  = 'none';
+    document.getElementById('placeholder').style.display = 'flex';
+    setStatus('Scanner arrêté.');
   };
 
-  /* ── Saisie manuelle ── */
-  window.goManual = function () {
+  window.rescan = async function() {
+    document.getElementById('result').classList.remove('visible');
+    await window.startScan();
+  };
+
+  window.goManual = function() {
     const v = document.getElementById('tag-input').value.trim();
     if (v.length < 4) { setStatus('Entrez au moins 4 caractères', 'err'); return; }
-    method = 'manuel';
     showResult(v);
   };
 
@@ -425,9 +283,5 @@
 
 })();
 </script>
-
-<!-- ZXing en fallback si BarcodeDetector absent (iPhone, Firefox) -->
-<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
-
 </body>
 </html>
