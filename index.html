@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>Scanner Dell - Service Tag</title>
+  <title>Scanner Dell - Journalisation Auto</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -53,31 +53,16 @@
     #reader__dashboard_section_swaplink,
     #reader__filescan_input { display: none !important; }
 
-    #ios-zone {
-      display: none;
-      width: 100%;
-      margin-bottom: 0.75rem;
-    }
+    #ios-zone { display: none; width: 100%; margin-bottom: 0.75rem; }
     #ios-preview-box {
-      width: 100%;
-      aspect-ratio: 4/3;
-      background: #111;
-      border-radius: 12px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 0.75rem;
+      width: 100%; aspect-ratio: 4/3; background: #111;
+      border-radius: 12px; overflow: hidden; display: flex;
+      align-items: center; justify-content: center; margin-bottom: 0.75rem;
       position: relative;
     }
-    #ios-preview {
-      width: 100%; height: 100%;
-      object-fit: contain;
-      display: none;
-    }
+    #ios-preview { width: 100%; height: 100%; object-fit: contain; display: none; }
     #ios-placeholder {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 8px; color: #777; font-size: 14px;
     }
     #ios-placeholder .icon { font-size: 36px; opacity: 0.5; }
@@ -115,7 +100,7 @@
     }
     .sep::before, .sep::after { content:''; flex:1; height:1px; background:#e5e5e5; }
 
-    .manual-row { display: flex; gap: 8px; }
+    .manual-row { display: flex; gap: 8px; margin-bottom: 0.5rem; }
     .manual-row input {
       flex: 1; padding: 11px 12px;
       border: 1.5px solid #ddd; border-radius: 10px;
@@ -128,6 +113,20 @@
       background: #0076CE; color: #fff;
       border: none; border-radius: 10px;
       font-size: 15px; font-weight: 500; cursor: pointer;
+    }
+
+    #server-type-select {
+      width: 100%; padding: 11px 12px;
+      border: 1.5px solid #ddd; border-radius: 10px;
+      font-size: 15px; outline: none;
+      margin-bottom: 0.5rem;
+    }
+
+    #expiry-date-input {
+      width: 100%; padding: 11px 12px;
+      border: 1.5px solid #ddd; border-radius: 10px;
+      font-size: 15px; outline: none;
+      margin-bottom: 0.5rem;
     }
 
     #result {
@@ -153,16 +152,20 @@
       font-size: 14px; cursor: pointer; margin-top: 8px;
       text-align: center;
     }
-
     .tip {
       font-size: 12px; color: #999;
       text-align: center; margin-top: 6px;
       line-height: 1.5;
     }
-    .help-btn {
-      background: none; border: none; color: #0076CE;
-      font-size: 13px; cursor: pointer; margin-top: 0.5rem;
-      text-align: center; width: 100%;
+    .log-message {
+      font-size: 14px; color: #2e7d32; text-align: center;
+      margin-top: 0.5rem; font-weight: 500;
+      padding: 8px; background: #e8f5e9; border-radius: 8px;
+    }
+    .error-message {
+      font-size: 14px; color: #c62828; text-align: center;
+      margin-top: 0.5rem; font-weight: 500;
+      padding: 8px; background: #ffebee; border-radius: 8px;
     }
   </style>
 </head>
@@ -172,7 +175,7 @@
     <div class="logo-icon">D</div>
     <div>
       <div class="logo-text">Scanner Dell</div>
-      <div class="logo-sub">Support Serveur</div>
+      <div class="logo-sub">Journalisation Auto</div>
     </div>
   </div>
 
@@ -197,25 +200,31 @@
     </div>
     <p id="status-ios" style="text-align:center;font-size:13px;color:#888;margin-bottom:0.75rem;min-height:18px;"></p>
     <input type="file" id="ios-input" accept="image/*" capture="environment"/>
-    <label for="ios-input" class="btn-photo">
-      📷 Prendre une photo du code-barres
-    </label>
+    <label for="ios-input" class="btn-photo">📷 Prendre une photo du code-barres</label>
     <p class="tip">Cadrez bien le code-barres, aussi proche que possible</p>
     <canvas id="decode-canvas"></canvas>
   </div>
 
   <div class="sep">ou saisie manuelle</div>
+
+  <!-- Champs pour les informations supplémentaires -->
+  <select id="server-type-select">
+    <option value="">-- Sélectionnez le type de serveur --</option>
+    <option value="PowerEdge R740">PowerEdge R740</option>
+    <option value="PowerEdge T440">PowerEdge T440</option>
+    <option value="PowerEdge R640">PowerEdge R640</option>
+    <option value="Autre">Autre</option>
+  </select>
+
+  <input type="date" id="expiry-date-input" placeholder="Date d'expiration" />
+
   <div class="manual-row">
-    <input id="tag-input" type="text" placeholder="Ex : ABC1234" maxlength="12"/>
+    <input id="tag-input" type="text" placeholder="Numéro de série (Service Tag)" maxlength="12"/>
     <button onclick="goManual()">→</button>
   </div>
-  
-  <button class="help-btn" onclick="toggleHelp()">❓ Aide</button>
-  <div id="help-text" style="display:none; margin-top:0.5rem; font-size:12px; color:#666;">
-    <p>1. Sur Android : autorisez l'accès à la caméra et pointez le code-barres.</p>
-    <p>2. Sur iPhone : prenez une photo du code-barres.</p>
-    <p>3. Sinon, saisissez manuellement le Service Tag.</p>
-  </div>
+
+  <div id="log-message" class="log-message" style="display: none;"></div>
+  <div id="error-message" class="error-message" style="display: none;"></div>
 
   <div id="result">
     <div class="r-label">Service Tag détecté</div>
@@ -230,21 +239,28 @@
 (function() {
   'use strict';
 
+  // 🔹 Remplacez cette URL par celle de votre script Google Apps Script
+  const SHEET_API_URL = "https://script.google.com/macros/s/VOTRE_URL_APPS_SCRIPT/exec";
+
   // Détection iOS
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   const badge = document.getElementById('os-badge');
+  const logMessage = document.getElementById('log-message');
+  const errorMessage = document.getElementById('error-message');
+  const serverTypeSelect = document.getElementById('server-type-select');
+  const expiryDateInput = document.getElementById('expiry-date-input');
 
   if (isIOS) {
     badge.textContent = '🍎 Mode iPhone — capture photo';
     document.getElementById('android-zone').style.display = 'none';
-    document.getElementById('ios-zone').style.display     = 'block';
+    document.getElementById('ios-zone').style.display = 'block';
     initIOS();
   } else {
     badge.textContent = '🤖 Mode Android — caméra en direct';
     document.getElementById('android-zone').style.display = 'block';
-    document.getElementById('ios-zone').style.display     = 'none';
+    document.getElementById('ios-zone').style.display = 'none';
   }
 
   // URL Dell
@@ -253,12 +269,71 @@
            encodeURIComponent(tag.toUpperCase()) + '/overview';
   }
 
+  // 🔹 Fonction pour journaliser dans le Google Sheet avec les 4 colonnes
+  async function logToSheet(serviceTag) {
+    const serverType = serverTypeSelect.value;
+    const expiryDate = expiryDateInput.value;
+
+    if (!serverType) {
+      errorMessage.textContent = "❌ Veuillez sélectionner un type de serveur !";
+      errorMessage.style.display = "block";
+      logMessage.style.display = "none";
+      return;
+    }
+
+    if (!expiryDate) {
+      errorMessage.textContent = "❌ Veuillez indiquer une date d'expiration !";
+      errorMessage.style.display = "block";
+      logMessage.style.display = "none";
+      return;
+    }
+
+    try {
+      const response = await fetch(SHEET_API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          serviceTag: serviceTag,
+          serverType: serverType,
+          expiryDate: expiryDate,
+          scanDate: new Date().toLocaleString('fr-FR')
+        }),
+      });
+
+      // Affiche un message de succès
+      logMessage.textContent = `✅ Journalisé : ${serviceTag} (${serverType})`;
+      logMessage.style.display = "block";
+      errorMessage.style.display = "none";
+
+      // Réinitialise les champs après 3 secondes
+      setTimeout(() => {
+        logMessage.style.display = "none";
+        serverTypeSelect.value = "";
+        expiryDateInput.value = "";
+      }, 3000);
+
+    } catch (error) {
+      errorMessage.textContent = "❌ Erreur lors de la journalisation : " + error.message;
+      errorMessage.style.display = "block";
+      logMessage.style.display = "none";
+      console.error("Erreur :", error);
+    }
+  }
+
   function showResult(raw) {
     const tag = raw.trim().replace(/\s+/g,'').toUpperCase();
     if (tag.length < 4) return;
+
     document.getElementById('result-tag').textContent = tag;
     document.getElementById('dell-link').href = buildUrl(tag);
     document.getElementById('result').classList.add('visible');
+
+    // 🔹 Journalise automatiquement dans le Google Sheet
+    logToSheet(tag);
+
     setTimeout(() => window.open(buildUrl(tag), '_blank'), 300);
   }
 
@@ -316,7 +391,7 @@
       }, () => {});
       scanning = true;
       document.getElementById('start-btn').style.display = 'none';
-      document.getElementById('stop-btn').style.display  = 'block';
+      document.getElementById('stop-btn').style.display = 'block';
       setStatus('Pointez le code-barres dans le cadre…');
     } catch(e) {
       setStatus('Erreur caméra : ' + (e.message || 'Accès refusé'), 'err');
@@ -331,8 +406,8 @@
       qr = null;
     }
     document.getElementById('start-btn').style.display = 'block';
-    document.getElementById('start-btn').disabled      = false;
-    document.getElementById('stop-btn').style.display  = 'none';
+    document.getElementById('start-btn').disabled = false;
+    document.getElementById('stop-btn').style.display = 'none';
     if (!document.getElementById('result').classList.contains('visible')) {
       setStatus('Scanner arrêté.');
     }
@@ -352,7 +427,6 @@
 
       setStatusIOS('Analyse de la photo…');
 
-      // Affiche la prévisualisation
       const preview = document.getElementById('ios-preview');
       const placeholder = document.getElementById('ios-placeholder');
       const objUrl = URL.createObjectURL(file);
@@ -378,7 +452,7 @@
         } catch(_) {}
       }
 
-      // Fallback : html5-qrcode décode le fichier image
+      // Fallback : html5-qrcode
       try {
         const decoder = new Html5Qrcode('decode-canvas', { verbose: false });
         const res = await decoder.scanFile(file, false);
@@ -390,7 +464,7 @@
         }
       } catch(_) {}
 
-      // Fallback ZXing sur canvas haute résolution
+      // Fallback ZXing
       try {
         const decoded = await decodeWithZXing(file);
         if (decoded) {
@@ -405,7 +479,6 @@
     });
   }
 
-  // ZXing sur image via canvas
   function decodeWithZXing(file) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -415,7 +488,7 @@
           const canvas = document.getElementById('decode-canvas');
           const maxW = 1600;
           const scale = Math.min(1, maxW / img.naturalWidth);
-          canvas.width  = img.naturalWidth  * scale;
+          canvas.width = img.naturalWidth * scale;
           canvas.height = img.naturalHeight * scale;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -425,13 +498,13 @@
           if (!Lib) { reject('ZXing absent'); return; }
 
           const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const lum    = new Lib.RGBLuminanceSource(imgData.data, canvas.width, canvas.height);
+          const lum = new Lib.RGBLuminanceSource(imgData.data, canvas.width, canvas.height);
           const bitmap = new Lib.BinaryBitmap(new Lib.HybridBinarizer(lum));
-          const hints  = new Map();
+          const hints = new Map();
           hints.set(Lib.DecodeHintType.POSSIBLE_FORMATS, [
             Lib.BarcodeFormat.CODE_39, Lib.BarcodeFormat.CODE_128,
             Lib.BarcodeFormat.CODE_93, Lib.BarcodeFormat.EAN_13,
-            Lib.BarcodeFormat.EAN_8,   Lib.BarcodeFormat.ITF,
+            Lib.BarcodeFormat.EAN_8, Lib.BarcodeFormat.ITF,
           ]);
           hints.set(Lib.DecodeHintType.TRY_HARDER, true);
           const reader = new Lib.MultiFormatReader();
@@ -464,25 +537,8 @@
       setStatusIOS('');
     }
   };
-
-  // Aide
-  window.toggleHelp = function() {
-    const helpText = document.getElementById('help-text');
-    helpText.style.display = helpText.style.display === 'none' ? 'block' : 'none';
-  };
-
-  // Charger ZXing dynamiquement si nécessaire
-  if (!('BarcodeDetector' in window)) {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js';
-    script.onload = () => console.log('ZXing chargé');
-    document.head.appendChild(script);
-  }
-
 })();
 </script>
-
-<!-- ZXing fallback -->
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
 </body>
 </html>
