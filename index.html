@@ -121,8 +121,29 @@
       border-radius: 12px; padding: 1rem;
     }
     #result.visible { display: block; }
+
     .r-label { font-size: 11px; color:#888; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
     .r-value { font-size: 26px; font-weight:700; color:#111; letter-spacing:3px; margin-bottom:1rem; word-break: break-all; }
+
+    /* Info grid for server type + expiry */
+    .r-info-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-bottom: 1rem;
+    }
+    .r-info-box {
+      background: #fff; border: 1px solid #d0e8ff;
+      border-radius: 10px; padding: 10px 12px;
+    }
+    .r-info-box .r-label { margin-bottom: 6px; }
+    .r-info-value {
+      font-size: 14px; font-weight: 600; color: #111;
+      word-break: break-word; line-height: 1.4;
+    }
+    .r-info-value.loading {
+      color: #888; font-weight: 400; font-style: italic;
+    }
+    .r-info-value.not-found { color: #999; font-weight: 400; }
+
     .btn-dell {
       display: flex; align-items: center; justify-content: center;
       width: 100%; padding: 13px;
@@ -153,6 +174,15 @@
       margin-top: 0.5rem; font-weight: 500;
       padding: 8px; background: #ffebee; border-radius: 8px;
     }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #b3d4f5; border-top-color: #0076CE;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -202,6 +232,19 @@
   <div id="result">
     <div class="r-label">Service Tag détecté</div>
     <div class="r-value" id="result-tag">—</div>
+
+    <!-- Info boxes: server type + expiry date -->
+    <div class="r-info-grid">
+      <div class="r-info-box">
+        <div class="r-label">Type de serveur</div>
+        <div class="r-info-value loading" id="result-server"><span class="spinner"></span>Recherche…</div>
+      </div>
+      <div class="r-info-box">
+        <div class="r-label">Fin de garantie</div>
+        <div class="r-info-value loading" id="result-expiry"><span class="spinner"></span>Recherche…</div>
+      </div>
+    </div>
+
     <a id="dell-link" class="btn-dell" target="_blank" rel="noopener">Ouvrir Dell Support →</a>
     <button class="btn-rescan" onclick="rescan()">🔄 Scanner à nouveau</button>
   </div>
@@ -212,14 +255,14 @@
 (function() {
   'use strict';
 
-  // 🔹 REMPLACEZ CETTE URL PAR VOTRE URL CLOUD GOOGLE APPS SCRIPT EFFECTIVE
+  // 🔹 REMPLACEZ PAR VOTRE URL GOOGLE APPS SCRIPT
   const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzJi62hhPXn0H0bhudyHx7mLKW3pe-2pelJA_fQqjQZBGWHpdz7U5ByBHsY5bfQFqnd/exec";
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  const badge = document.getElementById('os-badge');
-  const logMessage = document.getElementById('log-message');
+  const badge        = document.getElementById('os-badge');
+  const logMessage   = document.getElementById('log-message');
   const errorMessage = document.getElementById('error-message');
 
   if (isIOS) {
@@ -234,22 +277,32 @@
   }
 
   function buildUrl(tag) {
-    return 'https://www.dell.com/support/home/fr-fr/product-support/servicetag/' +
+    return 'https://www.dell.com/support/product-details/fr-fr/servicetag/' +
            encodeURIComponent(tag.toUpperCase()) + '/overview';
   }
 
-  // Envoi asynchrone au serveur Google Apps Script
+  function setResultField(id, value, found) {
+    const el = document.getElementById(id);
+    el.classList.remove('loading');
+    if (!found) {
+      el.classList.add('not-found');
+    }
+    el.textContent = value;
+  }
+
+  // Envoie le tag au serveur → reçoit serverType + expiryDate en retour
   async function logToSheet(serviceTag) {
     errorMessage.style.display = "none";
     logMessage.style.display = "block";
-    logMessage.textContent = "⏳ Recherche chez Dell et enregistrement...";
-    logMessage.style.background = "#fff3cd"; 
+    logMessage.innerHTML = '<span class="spinner"></span> Interrogation Dell et enregistrement…';
+    logMessage.style.background = "#fff3cd";
     logMessage.style.color = "#856404";
 
     try {
-      await fetch(SHEET_API_URL, {
+      // Note : on utilise mode:"cors" ici pour lire la réponse JSON
+      // Apps Script doit être déployé avec accès "Tout le monde"
+      const resp = await fetch(SHEET_API_URL, {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           serviceTag: serviceTag,
@@ -257,16 +310,68 @@
         }),
       });
 
-      logMessage.style.background = "#e8f5e9";
-      logMessage.style.color = "#2e7d32";
-      logMessage.textContent = `✅ Envoyé au Google Sheet : ${serviceTag}`;
+      let serverType = "Non trouvé";
+      let expiryDate = "Non trouvée";
+      let success    = false;
 
-      setTimeout(() => { logMessage.style.display = "none"; }, 4000);
+      if (resp.ok) {
+        try {
+          const json = await resp.json();
+          if (json.status === "success") {
+            success    = true;
+            serverType = json.serverType || "Non trouvé";
+            expiryDate = json.expiryDate || "Non trouvée";
+          }
+        } catch(_) {}
+      }
 
-    } catch (error) {
-      errorMessage.textContent = "❌ Problème de connexion : " + error.message;
-      errorMessage.style.display = "block";
-      logMessage.style.display = "none";
+      // Met à jour l'affichage
+      const serverFound = serverType && serverType !== "Non trouvé";
+      const expiryFound = expiryDate && expiryDate !== "Non trouvée";
+      setResultField('result-server', serverType, serverFound);
+      setResultField('result-expiry', expiryDate, expiryFound);
+
+      if (success) {
+        logMessage.style.background = "#e8f5e9";
+        logMessage.style.color = "#2e7d32";
+        logMessage.textContent = `✅ Enregistré dans Google Sheet : ${serviceTag}`;
+      } else {
+        // no-cors fallback: réponse opaque, on ne peut pas lire le JSON
+        // On affiche quand même un message positif car le sheet a probablement reçu les données
+        logMessage.style.background = "#fff3cd";
+        logMessage.style.color = "#856404";
+        logMessage.textContent = `⚠️ Réponse illisible (mode no-cors) — vérifiez le Sheet`;
+        setResultField('result-server', "Voir Dell Support", false);
+        setResultField('result-expiry', "Voir Dell Support", false);
+      }
+
+      setTimeout(() => { logMessage.style.display = "none"; }, 5000);
+
+    } catch (err) {
+      // Fallback no-cors si CORS bloqué
+      try {
+        await fetch(SHEET_API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            serviceTag: serviceTag,
+            scanDate: new Date().toLocaleString('fr-FR')
+          }),
+        });
+        logMessage.style.background = "#fff3cd";
+        logMessage.style.color = "#856404";
+        logMessage.textContent = "⚠️ Envoyé (mode no-cors) — données Dell non disponibles ici";
+        setResultField('result-server', "Voir Dell Support", false);
+        setResultField('result-expiry', "Voir Dell Support", false);
+        setTimeout(() => { logMessage.style.display = "none"; }, 5000);
+      } catch(err2) {
+        errorMessage.textContent = "❌ Problème de connexion : " + err2.message;
+        errorMessage.style.display = "block";
+        logMessage.style.display = "none";
+        setResultField('result-server', "Erreur réseau", false);
+        setResultField('result-expiry', "Erreur réseau", false);
+      }
     }
   }
 
@@ -274,17 +379,25 @@
     const tag = raw.trim().replace(/\s+/g,'').toUpperCase();
     if (tag.length < 4) return;
 
+    // Réinitialise les champs info avant la requête
+    ['result-server','result-expiry'].forEach(id => {
+      const el = document.getElementById(id);
+      el.className = 'r-info-value loading';
+      el.innerHTML = '<span class="spinner"></span>Recherche…';
+    });
+
     document.getElementById('result-tag').textContent = tag;
     document.getElementById('dell-link').href = buildUrl(tag);
     document.getElementById('result').classList.add('visible');
 
-    // Déclenche la recherche et l'enregistrement automatisé
+    // Déclenche la récupération des données Dell + enregistrement
     logToSheet(tag);
 
-    setTimeout(() => window.open(buildUrl(tag), '_blank'), 1500);
+    // Ouvre Dell Support après un délai
+    setTimeout(() => window.open(buildUrl(tag), '_blank'), 2000);
   }
 
-  // Android Live Cam
+  // ── Android Live Cam ──────────────────────────────────────────────────
   let qr = null;
   let scanning = false;
 
@@ -352,7 +465,7 @@
     document.getElementById('stop-btn').style.display = 'none';
   };
 
-  // iOS Photo
+  // ── iOS Photo ─────────────────────────────────────────────────────────
   function setStatusIOS(msg, cls) {
     const el = document.getElementById('status-ios');
     if (el) { el.textContent = msg; el.className = cls || ''; }
@@ -411,6 +524,8 @@
   window.rescan = function() {
     document.getElementById('result').classList.remove('visible');
     document.getElementById('tag-input').value = '';
+    errorMessage.style.display = 'none';
+    logMessage.style.display   = 'none';
     if (isIOS) {
       document.getElementById('ios-input').value = '';
       document.getElementById('ios-preview').style.display = 'none';
